@@ -9,7 +9,7 @@
 syntax = "proto3";
 // run in main directory project
 //option go_package = "package/pb";
-option go_package = "github.com/gdochadipa/oauth2-go-project/package/pb";
+option go_package = "v1/pb";
 
 package pb;
 
