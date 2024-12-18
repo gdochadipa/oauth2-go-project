@@ -1,0 +1,28 @@
+// protoc -I=. --go_out=. example_grpc.proto
+//protoc -I=. --go_out=. package/pb/*.proto
+//protoc --proto_path=. --go_out=. --go_opt=paths=source_relative api/proto/*.proto
+
+//protoc --go_out=. --go_opt=paths=source_relative \ => 
+ //   --go-grpc_out=. --go-grpc_opt=paths=source_relative \
+//    api/proto/*.proto
+
+syntax = "proto3";
+// run in main directory project
+//option go_package = "package/pb";
+option go_package = "github.com/gdochadipa/oauth2-go-project/package/pb";
+
+package pb;
+
+service Greeter {
+    rpc SayHello (HelloRequest) returns (HelloReply) {}
+}
+
+// The request message containing the user's name.
+message HelloRequest {
+  string name = 1;
+}
+
+// The response message containing the greetings
+message HelloReply {
+  string message = 1;
+}
