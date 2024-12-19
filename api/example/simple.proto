@@ -1,0 +1,77 @@
+syntax = "proto3";
+// run in main directory project
+//option go_package = "package/pb";
+option go_package = "v1/pb";
+
+message Item {
+    int32 id = 1;
+    string name = 2;
+    optional string description = 3;
+}
+
+message PaginationMeta {
+    int32 nextCursor = 1;
+    optional int32 lastCursor = 2;
+    bool hasNext = 3;
+    bool hasPrevious = 4;
+}
+
+message FilterItems {
+    optional string name = 1;
+    optional string description = 2;
+}
+
+message GetItemsResponse {
+    repeated Item data = 1;
+    PaginationMeta meta = 2;
+}
+
+message GetItemsRequest {
+    int32 sorting = 1;
+    optional int32 cursor = 2;
+    optional FilterItems fitler = 3;
+}
+
+message StoreItemResponse {
+    Item item = 1;
+}
+
+message StoreItemRequest {
+    string name = 1;
+    optional string description = 2;
+}
+
+message UpdateItemResponse {
+    Item item = 1;
+}
+
+message UpdateItemRequest {
+    int32 id = 1;
+    optional string name = 2;
+    optional string description = 3;
+}
+
+message DeletetemResponse {
+    int32 id = 1;
+}
+
+message DeleteItemRequest {
+    int32 id = 1;
+}
+
+message GetItemResponse {
+    Item data = 1;
+}
+
+message GetItemRequest {
+    int32 id = 1;
+}
+
+
+service ItemService {
+    rpc StoreItem(StoreItemRequest) returns (StoreItemResponse);
+    rpc GetItems (GetItemsRequest) returns (GetItemsResponse);
+    rpc GetItem (GetItemRequest) returns (GetItemResponse);
+    rpc UpdateItem (UpdateItemRequest) returns (UpdateItemResponse);
+    rpc DeleteItem (DeleteItemRequest) returns (DeletetemResponse);
+}
