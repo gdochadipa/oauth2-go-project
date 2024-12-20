@@ -11,4 +11,4 @@
 *.out
 /.vscode/launch.json
 .env
-./configs/configs-dev.yml
+/configs/configs-dev.yml
