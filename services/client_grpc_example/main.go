@@ -6,7 +6,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/gdochadipa/oauth2-go-project/pkg/pb"
+	"github.com/gdochadipa/oauth2-go-project/pkg/pb_test"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )
@@ -28,12 +28,12 @@ func main() {
 	}
 
 	defer con.Close()
-	c := pb.NewGreeterClient(con)
+	c := pb_test.NewGreeterClient(con)
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
-	r, err := c.SayHello(ctx, &pb.HelloRequest{Name: *name})
+	r, err := c.SayHello(ctx, &pb_test.HelloRequest{Name: *name})
 
 	if err != nil {
 		log.Fatalf("could not greet: %v", err)

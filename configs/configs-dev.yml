@@ -1,0 +1,10 @@
+Database:
+  Host: "${DATABASE_HOST:ep-morning-dust-a1vn47b5.ap-southeast-1.pg.koyeb.app}"         # Will be replaced with DB_HOST env variable
+  Name: "${DATABASE_NAME:koyebdb}"
+  User: "${DATABASE_USER:ochadipa}"
+  Password: "${DATABASE_PASSWORD:dOPJQr1xz6vf}"
+  Port: "${PORT:5123}"
+
+Server:
+  Port: "${SERVER_PORT:8080}"  # Default value 8080 if SERVER_PORT not set
+  Env: "${APP_ENV:development}"

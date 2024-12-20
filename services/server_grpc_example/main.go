@@ -7,7 +7,7 @@ import (
 	"log"
 	"net"
 
-	"github.com/gdochadipa/oauth2-go-project/pkg/pb"
+	"github.com/gdochadipa/oauth2-go-project/pkg/pb_test"
 	"google.golang.org/grpc"
 )
 
@@ -16,12 +16,12 @@ var (
 )
 
 type server struct {
-	pb.UnimplementedGreeterServer
+	pb_test.UnimplementedGreeterServer
 }
 
-func (s *server) SayHello(ctx context.Context, in *pb.HelloRequest) (*pb.HelloReply, error) {
+func (s *server) SayHello(ctx context.Context, in *pb_test.HelloRequest) (*pb_test.HelloReply, error) {
 	log.Printf("Received: %v", in.GetName())
-	return &pb.HelloReply{Message: "Heloo" + in.GetName()}, nil
+	return &pb_test.HelloReply{Message: "Heloo" + in.GetName()}, nil
 }
 
 func main() {
@@ -32,7 +32,7 @@ func main() {
 	}
 
 	s := grpc.NewServer()
-	pb.RegisterGreeterServer(s, &server{})
+	pb_test.RegisterGreeterServer(s, &server{})
 
 	log.Printf("server listening at %v", lis.Addr())
 

@@ -8,7 +8,7 @@
 // 	protoc        v3.12.4
 // source: api/proto/example.proto
 
-package pb
+package pb_test
 
 import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"

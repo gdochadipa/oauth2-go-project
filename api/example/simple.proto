@@ -1,6 +1,7 @@
 syntax = "proto3";
 // run in main directory project
 //option go_package = "package/pb";
+//protoc --proto_path=api/example --go_out=pkg/api --go-grpc_out=pkg/api simple.proto
 option go_package = "v1/pb";
 
 message Item {

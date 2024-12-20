@@ -1,7 +1,7 @@
 // untuk twirp
 // protoc --proto_path=api/proto --go_out=pkg/api --twirp_out=pkg/api user.proto  
 // untuk basic
-// protoc --proto_path=api/proto --go_out=pkg/api user.proto
+// protoc --proto_path=api/example --go_out=pkg/api --go-grpc_out=pkg/api user.proto
 
 syntax = "proto3";
 package v1;

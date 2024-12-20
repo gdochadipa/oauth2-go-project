@@ -1,0 +1,9 @@
+database:
+  host: "${DATABASE_HOST}"         # Will be replaced with DB_HOST env variable
+  name: "${DATABASE_NAME}"
+  user: "${DATABASE_USER}"
+  password: "${DATABASE_PASSWORD}"
+
+server:
+  port: "${SERVER_PORT:8080}"  # Default value 8080 if SERVER_PORT not set
+  env: "${APP_ENV:development}"
