@@ -7,17 +7,16 @@ import (
 	"github.com/google/uuid"
 )
 
-func (r *Repository) GetUser(id string) (*entity.OAuthUser, error) {
-	var user entity.OAuthUser
-	parsedUUID, err := uuid.Parse(id)
+func (r *Repository) GetItemDetail(id string) (*entity.Item, error) {
+	var item entity.Item
+	parseUUID, err := uuid.Parse(id)
 	if err != nil {
 		return nil, fmt.Errorf("something wrong with id")
 	}
 
-	result := r.db.First(&user, "id = ?", parsedUUID)
+	result := r.db.First(&item, "id = ?", parseUUID)
 	if result.Error != nil {
 		return nil, result.Error
 	}
-
-	return &user, nil
+	return &item, err
 }
