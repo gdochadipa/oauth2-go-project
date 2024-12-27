@@ -11,10 +11,8 @@ message Item {
 }
 
 message PaginationMeta {
-    int32 nextCursor = 1;
-    optional int32 lastCursor = 2;
-    bool hasNext = 3;
-    bool hasPrevious = 4;
+    int32 skip = 1;
+    int32 limitPage = 2;
 }
 
 message FilterItems {

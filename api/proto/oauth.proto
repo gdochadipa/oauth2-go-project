@@ -1,0 +1,24 @@
+syntax = "proto3";
+// run in main directory project
+//option go_package = "package/pb";
+//protoc --proto_path=api/example --go_out=pkg/api --go-grpc_out=pkg/api simple.proto
+option go_package = "v1/pb";
+
+message OAuth {
+    string id = 1;
+    string name = 2;
+    optional string description = 3;
+}
+
+message GetOAuthResponse {
+    OAuth item = 1;
+}
+
+message GetOauthReq {
+    string id = 1;
+}
+
+
+service OAuthervice {
+    rpc GetOauth(GetOauthReq) returns (GetOAuthResponse);
+}

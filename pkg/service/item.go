@@ -9,6 +9,10 @@ import (
 
 type ItemService interface {
 	PostItem(ctx context.Context, name string, descriptiont string) (*entity.Item, error)
+	GetAllItems(ctx context.Context, skip uint32, limitPage uint32) ([]entity.Item, error)
+	GetItem(ctx context.Context, id uuid.UUID) (*entity.Item, error)
+	PutItem(ctx context.Context, item entity.Item) (*entity.Item, error)
+	DropItem(ctx context.Context, id uuid.UUID) error
 }
 
 func (s *oauthService) PostItem(ctx context.Context, name string, desc string) (*entity.Item, error) {
