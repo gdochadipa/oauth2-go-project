@@ -32,7 +32,7 @@ func main() {
 	// }
 
 	r := repository.NewDBRepository(db)
-	db.Close()
+	defer db.Close()
 
 	log.Println("Listening on port 8080...")
 	s := service.NewService(r)
