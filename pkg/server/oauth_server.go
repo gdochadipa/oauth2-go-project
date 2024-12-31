@@ -19,13 +19,33 @@ type grpcServer struct {
 }
 
 // DeleteItem implements pb.ItemServiceServer.
-func (g *grpcServer) DeleteItem(context.Context, *pb.DeleteItemRequest) (*pb.DeletetemResponse, error) {
-	panic("unimplemented")
+func (g *grpcServer) DeleteItem(ctx context.Context, req *pb.DeleteItemRequest) (*pb.DeletetemResponse, error) {
+	err := g.service.DropItem(ctx, uuid.MustParse(req.Id))
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.DeletetemResponse{
+		Id: req.Id,
+	}, nil
 }
 
 // GetItem implements pb.ItemServiceServer.
-func (g *grpcServer) GetItem(context.Context, *pb.GetItemRequest) (*pb.GetItemResponse, error) {
-	panic("unimplemented")
+func (g *grpcServer) GetItem(ctx context.Context, req *pb.GetItemRequest) (*pb.GetItemResponse, error) {
+	item, err := g.service.GetItem(ctx, uuid.MustParse(req.Id))
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.GetItemResponse{
+		Data: &pb.Item{
+			Id:          item.Id.String(),
+			Name:        item.Name,
+			Description: &item.Description,
+		},
+	}, err
 }
 
 // GetItems implements pb.ItemServiceServer.
