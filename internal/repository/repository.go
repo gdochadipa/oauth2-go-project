@@ -15,6 +15,10 @@ var (
 type Repository interface {
 	Close()
 	ItemRepository
+	ClientRepository
+	OAuthCodeRepostiory
+	AccessTokenRepository
+	ScopeRepository
 }
 
 type dbRepository struct {

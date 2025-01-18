@@ -52,3 +52,8 @@ type OAuthToken struct {
 	Scopes                []string   `json:"scopes"`
 	CreatedAt             time.Time  `json:"createdAt"`
 }
+
+type OAuthScope struct {
+	Id   string `json:"id"`
+	Name string `json:"name"`
+}
