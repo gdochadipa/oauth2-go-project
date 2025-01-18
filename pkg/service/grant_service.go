@@ -12,55 +12,47 @@ type GrantInterface interface {
 	getGrantType()
 }
 
-type GrantService struct {
-	jwt JWTInterface
-}
-
 // encryptAccessToken implements GrantInterface.
-func (g *GrantService) encryptAccessToken() {
+func (g *ServiceServer) encryptAccessToken() {
 	panic("unimplemented")
 }
 
 // encryptRefreshToken implements GrantInterface.
-func (g *GrantService) encryptRefreshToken() {
+func (g *ServiceServer) encryptRefreshToken() {
 	panic("unimplemented")
 }
 
 // getBasicAuthCredentials implements GrantInterface.
-func (g *GrantService) getBasicAuthCredentials() {
+func (g *ServiceServer) getBasicAuthCredentials() {
 	panic("unimplemented")
 }
 
 // getClientCredentials implements GrantInterface.
-func (g *GrantService) getClientCredentials() {
+func (g *ServiceServer) getClientCredentials() {
 	panic("unimplemented")
 }
 
 // getGrantType implements GrantInterface.
-func (g *GrantService) getGrantType() {
+func (g *ServiceServer) getGrantType() {
 	panic("unimplemented")
 }
 
 // issueAccessToken implements GrantInterface.
-func (g *GrantService) issueAccessToken() {
+func (g *ServiceServer) issueAccessToken() {
 	panic("unimplemented")
 }
 
 // makeBearerTokenResponse implements GrantInterface.
-func (g *GrantService) makeBearerTokenResponse() {
+func (g *ServiceServer) makeBearerTokenResponse() {
 	panic("unimplemented")
 }
 
 // validateClient implements GrantInterface.
-func (g *GrantService) validateClient() {
+func (g *ServiceServer) validateClient() {
 	panic("unimplemented")
 }
 
 // validateScopes implements GrantInterface.
-func (g *GrantService) validateScopes() {
+func (g *ServiceServer) validateScopes() {
 	panic("unimplemented")
-}
-
-func NewGrantRepository(jwt JWTInterface) GrantInterface {
-	return &GrantService{jwt: jwt}
 }
