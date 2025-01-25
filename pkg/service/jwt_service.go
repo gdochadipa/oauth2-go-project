@@ -9,8 +9,8 @@ import (
 )
 
 type JWTInterface interface {
-	createRefreshToken(userId uuid.UUID, clientId string, scope []string, expiredAt time.Time, issueAt time.Time) (*string, error)
-	createAccessToken(userId uuid.UUID, username string, scope []string, expiredAt time.Time, issueAt time.Time, notBefore time.Time) (*string, error)
+	createRefreshToken(userId uuid.UUID, clientId string, scopes string, expiredAt time.Time) (*string, error)
+	createAccessToken(userId uuid.UUID, username string, scope string, clientId string, expiredAt time.Time, redirectUri string, issueAt time.Time, notBefore time.Time) (*string, error)
 	decodeAccessToken(encryptData string) (*AccessToken, error)
 	decodeRefreshToken(encryptData string) (*RefreshAccessToken, error)
 	verifyAccessToken(encryptData string) (*AccessToken, error)
@@ -34,12 +34,12 @@ sepertinya bisa sama dengan AccessToken tapi isinya lebih banyak aja.
 create AccessToken akan beda dg RefreshToken, yg memedakan cuma issian aja, dan parameter-
 */
 type AccessToken struct {
-	UserId      string   `json:"userId"`
-	Username    string   `json:"username"`
-	ClientId    string   `json:"clientId"`
-	RedirectUri string   `json:"redirectUri"`
-	AuthCodeId  string   `json:"auth_code"`
-	Scopes      []string `json:"scopes"`
+	UserId      string `json:"userId"`
+	Username    string `json:"username"`
+	ClientId    string `json:"clientId"`
+	RedirectUri string `json:"redirectUri"`
+	AuthCodeId  string `json:"auth_code"`
+	Scopes      string `json:"scopes"`
 	jwt.RegisteredClaims
 }
 
@@ -47,7 +47,7 @@ type RefreshAccessToken struct {
 	ClientId            string    `json:"clientId"`
 	RedirectUri         string    `json:"redirectUri"`
 	AuthCodeId          string    `json:"auth_code"`
-	Scopes              []string  `json:"scopes"`
+	Scopes              string    `json:"scopes"`
 	UserId              string    `json:"userId"`
 	ExpireTime          time.Time `json:"expireTime"`
 	CodeChallenge       *string   `json:"codeChallenge"`
@@ -55,11 +55,11 @@ type RefreshAccessToken struct {
 	jwt.RegisteredClaims
 }
 
-func (r *JWTRepository) createRefreshToken(userId uuid.UUID, clientId string, scope []string, expiredAt time.Time, issueAt time.Time) (*string, error) {
+func (r *JWTRepository) createRefreshToken(userId uuid.UUID, clientId string, scopes string, expiredAt time.Time) (*string, error) {
 	claims := RefreshAccessToken{
 		UserId:   userId.String(),
 		ClientId: clientId,
-		Scopes:   scope,
+		Scopes:   scopes,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * time.Hour)),
 		},
@@ -74,11 +74,13 @@ func (r *JWTRepository) createRefreshToken(userId uuid.UUID, clientId string, sc
 	return &signedToken, nil
 }
 
-func (r *JWTRepository) createAccessToken(userId uuid.UUID, username string, scope []string, expiredAt time.Time, issueAt time.Time, notBefore time.Time) (*string, error) {
+func (r *JWTRepository) createAccessToken(userId uuid.UUID, username string, scope string, clientId string, expiredAt time.Time, redirectUri string, issueAt time.Time, notBefore time.Time) (*string, error) {
 	claims := AccessToken{
-		UserId:   userId.String(),
-		Username: username,
-		Scopes:   scope,
+		UserId:      userId.String(),
+		Username:    username,
+		Scopes:      scope,
+		ClientId:    clientId,
+		RedirectUri: redirectUri,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(expiredAt),
 			Audience:  []string{userId.String(), username},
