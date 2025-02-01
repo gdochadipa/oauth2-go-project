@@ -16,3 +16,16 @@ const (
 	Password      GrantIdentifier = "password"
 	Implicit      GrantIdentifier = "implicit"
 )
+
+var grantIdentifierType = map[GrantIdentifier]struct{}{
+	Code:          {},
+	Client:        {},
+	Refresh_token: {},
+	Password:      {},
+	Implicit:      {},
+}
+
+func IsIncludeGrant(s GrantIdentifier) bool {
+	_, isExists := grantIdentifierType[s]
+	return isExists
+}

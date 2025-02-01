@@ -7,7 +7,7 @@ import (
 )
 
 type AccessTokenRepository interface {
-	IssueToken(ctx context.Context, client *entity.OAuthClient, scope []string, user *entity.OAuthUser) (*entity.OAuthToken, error)
+	IssueToken(ctx context.Context, client *entity.OAuthClient, scope []entity.OAuthScope, user *entity.OAuthUser) (*entity.OAuthToken, error)
 	IssueRefreshToken(ctx context.Context, accessToken *entity.OAuthToken, client *entity.OAuthClient) (*entity.OAuthToken, error)
 	PersistAccessToken(ctx context.Context, accessToken *entity.OAuthToken) error
 	RevokeAccessToken(ctx context.Context, accessToken *entity.OAuthToken) error
