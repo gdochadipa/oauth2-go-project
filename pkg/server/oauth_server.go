@@ -14,7 +14,7 @@ import (
 )
 
 type grpcServer struct {
-	service service.Service
+	service service.ItemService
 	pb.UnimplementedItemServiceServer
 }
 
@@ -105,7 +105,7 @@ func (g *grpcServer) UpdateItem(ctx context.Context, req *pb.UpdateItemRequest) 
 	}}, err
 }
 
-func ListenGRPC(s service.Service, port int) error {
+func ListenGRPC(s service.ItemService, port int) error {
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
 	if err != nil {
 		return err
