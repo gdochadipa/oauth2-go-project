@@ -11,7 +11,7 @@ import (
 	"github.com/gdochadipa/oauth2-go-project/pkg/service"
 )
 
-func main() {
+func mainExample() {
 	cfg, err := configs.Load()
 
 	if err != nil {
@@ -34,10 +34,8 @@ func main() {
 	r := repository.NewDBRepository(db)
 	defer db.Close()
 
-	jwt := service.NewJWTRepository([]byte("testing"))
-
 	log.Println("Listening on port 8080...")
-	s := service.NewGrantService(r, jwt)
-	log.Fatal(server.ListenGRPC(s, 8080))
+	s := service.NewItemService(r)
+	log.Fatal(server.ListenExampleGRPC(s, 8080))
 
 }

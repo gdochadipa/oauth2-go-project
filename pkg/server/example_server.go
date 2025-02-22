@@ -13,13 +13,13 @@ import (
 	"google.golang.org/grpc/reflection"
 )
 
-type grpcServer struct {
-	service service.ServiceInterface
+type grpcExampleServer struct {
+	service service.ItemService
 	pb.UnimplementedItemServiceServer
 }
 
 // DeleteItem implements pb.ItemServiceServer.
-func (g *grpcServer) DeleteItem(ctx context.Context, req *pb.DeleteItemRequest) (*pb.DeletetemResponse, error) {
+func (g *grpcExampleServer) DeleteItem(ctx context.Context, req *pb.DeleteItemRequest) (*pb.DeletetemResponse, error) {
 	err := g.service.DropItem(ctx, uuid.MustParse(req.Id))
 
 	if err != nil {
@@ -32,7 +32,7 @@ func (g *grpcServer) DeleteItem(ctx context.Context, req *pb.DeleteItemRequest) 
 }
 
 // GetItem implements pb.ItemServiceServer.
-func (g *grpcServer) GetItem(ctx context.Context, req *pb.GetItemRequest) (*pb.GetItemResponse, error) {
+func (g *grpcExampleServer) GetItem(ctx context.Context, req *pb.GetItemRequest) (*pb.GetItemResponse, error) {
 	item, err := g.service.GetItem(ctx, uuid.MustParse(req.Id))
 
 	if err != nil {
@@ -49,7 +49,7 @@ func (g *grpcServer) GetItem(ctx context.Context, req *pb.GetItemRequest) (*pb.G
 }
 
 // GetItems implements pb.ItemServiceServer.
-func (g *grpcServer) GetItems(ctx context.Context, req *pb.GetItemsRequest) (*pb.GetItemsResponse, error) {
+func (g *grpcExampleServer) GetItems(ctx context.Context, req *pb.GetItemsRequest) (*pb.GetItemsResponse, error) {
 	items, err := g.service.GetAllItems(ctx, req.Skip, req.LimitPage)
 
 	if err != nil {
@@ -73,7 +73,7 @@ func (g *grpcServer) GetItems(ctx context.Context, req *pb.GetItemsRequest) (*pb
 }
 
 // StoreItem implements pb.ItemServiceServer.
-func (g *grpcServer) StoreItem(ctx context.Context, req *pb.StoreItemRequest) (*pb.StoreItemResponse, error) {
+func (g *grpcExampleServer) StoreItem(ctx context.Context, req *pb.StoreItemRequest) (*pb.StoreItemResponse, error) {
 	item, err := g.service.PostItem(ctx, req.Name, *req.Description)
 	if err != nil {
 		return nil, err
@@ -87,7 +87,7 @@ func (g *grpcServer) StoreItem(ctx context.Context, req *pb.StoreItemRequest) (*
 }
 
 // UpdateItem implements pb.ItemServiceServer.
-func (g *grpcServer) UpdateItem(ctx context.Context, req *pb.UpdateItemRequest) (*pb.UpdateItemResponse, error) {
+func (g *grpcExampleServer) UpdateItem(ctx context.Context, req *pb.UpdateItemRequest) (*pb.UpdateItemResponse, error) {
 	item := &entity.Item{
 		Id:          uuid.MustParse(req.Id),
 		Name:        *req.Name,
@@ -105,14 +105,14 @@ func (g *grpcServer) UpdateItem(ctx context.Context, req *pb.UpdateItemRequest) 
 	}}, err
 }
 
-func ListenGRPC(s service.ServiceInterface, port int) error {
+func ListenExampleGRPC(s service.ItemService, port int) error {
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
 	if err != nil {
 		return err
 	}
 
 	server := grpc.NewServer()
-	pb.RegisterItemServiceServer(server, &grpcServer{service: s})
+	pb.RegisterItemServiceServer(server, &grpcExampleServer{service: s})
 	reflection.Register(server)
 
 	return server.Serve(lis)

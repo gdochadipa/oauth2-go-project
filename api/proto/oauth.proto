@@ -4,21 +4,103 @@ syntax = "proto3";
 //protoc --proto_path=api/example --go_out=pkg/api --go-grpc_out=pkg/api simple.proto
 option go_package = "v1/pb";
 
-message OAuth {
-    string id = 1;
-    string name = 2;
-    optional string description = 3;
+message GenerateCodeRequest {
+    string responseType = 1;
+    string clientId = 2;
+    string redirectUri = 3;
+    string codeChallenge = 4;
+    string scope = 5; // sparated by space, or can to encoded to uriencoded (also sparated by space)
 }
 
-message GetOAuthResponse {
-    OAuth item = 1;
-}
-
-message GetOauthReq {
-    string id = 1;
+message GenerateCodeResponse {
+    string code = 1;
+    string uri = 2;
 }
 
 
-service OAuthervice {
-    rpc GetOauth(GetOauthReq) returns (GetOAuthResponse);
+message AuthCodeGrantRequest {
+    string grantType = 1;
+    string authorization = 2; // "Basic ${Base64(clientId:ClientSecret)}"
+    string redirectUri = 3;
+    string code = 4; // this code generate after GenerateAuthCode and login
+    string clientId = 5;
+}
+
+message AuthCodeGrantResponse {
+    string idToken = 1;
+    string accessToken = 2;
+    string refreshToken = 3;
+    string tokenType = 4;
+    int32 expiresIn = 5;
+}
+
+
+message ClientCredentGrantRequest {
+    string grantType = 1;
+    string authorization = 2; // "Basic ${Base64(clientId:ClientSecret)}"
+    string scope = 3;
+}
+
+message ClientCredentGrantResponse {
+    string accessToken = 1;
+    string tokenType = 2;
+    int32 expiresIn = 3;
+}
+
+message CredentialsGrantRequest {
+    string grantType = 1;
+    string authorization = 2; // "Basic ${Base64(clientId:ClientSecret)}"
+    string scope = 3;
+    string username = 4;
+    string password = 5;
+}
+
+message CredentialsGrantResponse {
+    string accessToken = 1;
+    string refreshToken = 2;
+    string tokenType = 3;
+    int32 expiresIn = 4;
+    string scope = 5;
+}
+
+
+message RefreshTokenGrantRequest {
+    string grantType = 1;
+    string authorization = 2; // "Basic ${Base64(clientId:ClientSecret)}"
+    string scope = 3;
+    string refreshToken = 4;
+}
+
+message RefreshTokenGrantResponse {
+    string accessToken = 1;
+    string refreshToken = 2;
+    string tokenType = 3;
+    int32 expiresIn = 4;
+    string scope = 5;
+}
+
+service OAuthService {
+    // code flow
+    // this flow to generate aut code first from company and than can authorized toke
+    // need add feature to login on our service. like there is an interface
+    // so that make sure if the user are credentials 
+    // inspired by AWS cognito
+
+    // grpc is not support browser redirect, so it will handle another services
+    // planning is create new endpoint on grpc when try to get new credentials
+    rpc GenerateAuthCode(GenerateCodeRequest) returns (GenerateCodeResponse);
+    rpc AuthorizeToken(AuthCodeGrantRequest) returns (AuthCodeGrantResponse);
+
+    //client credential flow
+    // get credentials basic token
+    rpc ClientCredentGrant(ClientCredentGrantRequest) returns (ClientCredentGrantResponse);
+
+    // password flow 
+    // require credentuials / kuje oasswird and user name
+    rpc PasswordTokenGrant(CredentialsGrantRequest) returns (CredentialsGrantResponse);
+
+    // refresh token flow
+    rpc RefreshTokenGrant(RefreshTokenGrantRequest) returns (RefreshTokenGrantResponse);
+
+
 }
