@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/gdochadipa/oauth2-go-project/internal/enum"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 )
@@ -15,6 +16,8 @@ type JWTInterface interface {
 	decodeRefreshToken(encryptData string) (*RefreshAccessToken, error)
 	verifyAccessToken(encryptData string) (*AccessToken, error)
 	verifyRefreshToken(encryptData string) (*RefreshAccessToken, error)
+	createAuthCodeToken(payload *PayloadAuthenticationCode) (*string, error)
+	verifyAuthCodeToken(tokenString string) (*AuthCodeToken, error)
 }
 
 type JWTRepository struct {
@@ -52,6 +55,19 @@ type RefreshAccessToken struct {
 	ExpireTime          time.Time `json:"expireTime"`
 	CodeChallenge       *string   `json:"codeChallenge"`
 	CodeChallengeMethod *string   `json:"codeChallengeMethod"`
+	jwt.RegisteredClaims
+}
+
+type AuthCodeToken struct {
+	ClidenID            string         `json:"client_id"`
+	AuthCodeID          string         `json:"auth_code_id"`
+	ExpireTime          int64          `json:"expire_time"`
+	Scopes              []string       `json:"scopes"`
+	UserID              *int16         `json:"user_id"`
+	RedirectURI         *string        `json:"redirect_uri"`
+	CodeChallenge       *string        `json:"code_challenge"`
+	CodeChallengeMethod *enum.CodeEnum `json:"code_challenge_method"`
+	Audience            []string       `json:"audience"`
 	jwt.RegisteredClaims
 }
 
@@ -161,6 +177,55 @@ func (r *JWTRepository) verifyRefreshToken(encryptData string) (*RefreshAccessTo
 	}
 
 	return nil, fmt.Errorf("invalid refresh token claims")
+}
+
+func (r *JWTRepository) createAuthCodeToken(payload *PayloadAuthenticationCode) (*string, error) {
+	claims := AuthCodeToken{
+		ClidenID:            payload.ClidenID,
+		RedirectURI:         payload.RedirectURI,
+		AuthCodeID:          payload.AuthCodeID,
+		Scopes:              payload.Scopes,
+		UserID:              payload.UserID,
+		ExpireTime:          payload.ExpireTime,
+		CodeChallenge:       payload.CodeChallenge,
+		CodeChallengeMethod: payload.CodeChallengeMethod,
+		Audience:            payload.Audience,
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * time.Hour)), // Token expires in 24 hours
+			IssuedAt:  jwt.NewNumericDate(time.Now()),                     // Token issue time
+			NotBefore: jwt.NewNumericDate(time.Now()),                     // Token not valid before this time
+		},
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	code, err := token.SignedString(r.secretKey)
+
+	if err != nil {
+		return nil, fmt.Errorf("error parsing refresh token: %w", err)
+	}
+
+	return &code, nil
+}
+
+func (r *JWTRepository) verifyAuthCodeToken(tokenString string) (*AuthCodeToken, error) {
+	token, err := jwt.ParseWithClaims(tokenString, &AuthCodeToken{}, func(t *jwt.Token) (interface{}, error) {
+
+		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", t.Header["alg"])
+		}
+		return r.secretKey, nil
+	})
+
+	if err != nil {
+		return nil, fmt.Errorf("error parsing token: %v", err)
+	}
+
+	// Extract and validate claims
+	if claims, ok := token.Claims.(*AuthCodeToken); ok && token.Valid {
+		return claims, nil
+	}
+
+	return nil, fmt.Errorf("invalid token claims")
 }
 
 func NewJWTRepository(secretKey []byte) JWTInterface {

@@ -25,7 +25,7 @@ func (r *dbRepository) IssueRefreshToken(ctx context.Context, accessToken *entit
 }
 
 // IssueToken implements Repository.
-func (r *dbRepository) IssueToken(ctx context.Context, client *entity.OAuthClient, scope []string, user *entity.OAuthUser) (*entity.OAuthToken, error) {
+func (r *dbRepository) IssueToken(ctx context.Context, client *entity.OAuthClient, scope []entity.OAuthScope, user *entity.OAuthUser) (*entity.OAuthToken, error) {
 	panic("unimplemented")
 }
 

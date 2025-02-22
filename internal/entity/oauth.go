@@ -9,6 +9,7 @@ import (
 
 type OAuthUser struct {
 	Id           uuid.UUID `json:"id"`
+	IdentifierId int16     `json:"identifierId"`
 	Username     string    `json:"username"`
 	Email        string    `json:"email"`
 	PasswordHash string    `json:"password"`
