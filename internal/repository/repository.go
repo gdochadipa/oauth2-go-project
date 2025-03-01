@@ -19,6 +19,7 @@ type Repository interface {
 	OAuthCodeRepostiory
 	AccessTokenRepository
 	ScopeRepository
+	UserRepository
 }
 
 type dbRepository struct {

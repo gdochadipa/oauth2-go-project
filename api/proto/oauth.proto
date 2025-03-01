@@ -9,7 +9,7 @@ message GenerateCodeRequest {
     string clientId = 2;
     string redirectUri = 3;
     string codeChallenge = 4;
-    string scope = 5; // sparated by space, or can to encoded to uriencoded (also sparated by space)
+    string scopes = 5; // sparated by space, or can to encoded to uriencoded (also sparated by space)
 }
 
 message GenerateCodeResponse {
@@ -24,6 +24,7 @@ message AuthCodeGrantRequest {
     string redirectUri = 3;
     string code = 4; // this code generate after GenerateAuthCode and login
     string clientId = 5;
+    string codeVerifier=6;
 }
 
 message AuthCodeGrantResponse {
@@ -38,7 +39,7 @@ message AuthCodeGrantResponse {
 message ClientCredentGrantRequest {
     string grantType = 1;
     string authorization = 2; // "Basic ${Base64(clientId:ClientSecret)}"
-    string scope = 3;
+    string scopes = 3;
 }
 
 message ClientCredentGrantResponse {
@@ -50,7 +51,7 @@ message ClientCredentGrantResponse {
 message CredentialsGrantRequest {
     string grantType = 1;
     string authorization = 2; // "Basic ${Base64(clientId:ClientSecret)}"
-    string scope = 3;
+    string scopes = 3;
     string username = 4;
     string password = 5;
 }
@@ -60,14 +61,14 @@ message CredentialsGrantResponse {
     string refreshToken = 2;
     string tokenType = 3;
     int32 expiresIn = 4;
-    string scope = 5;
+    string scopes = 5;
 }
 
 
 message RefreshTokenGrantRequest {
     string grantType = 1;
     string authorization = 2; // "Basic ${Base64(clientId:ClientSecret)}"
-    string scope = 3;
+    string scopes = 3;
     string refreshToken = 4;
 }
 
@@ -76,7 +77,7 @@ message RefreshTokenGrantResponse {
     string refreshToken = 2;
     string tokenType = 3;
     int32 expiresIn = 4;
-    string scope = 5;
+    string scopes = 5;
 }
 
 service OAuthService {

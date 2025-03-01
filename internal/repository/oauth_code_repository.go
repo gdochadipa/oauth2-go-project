@@ -9,7 +9,7 @@ import (
 type OAuthCodeRepostiory interface {
 	FindByCode(ctx context.Context, code string) (*entity.OAuthCode, error)
 	IssueWithAuthCode(ctx context.Context, client *entity.OAuthClient, user *entity.OAuthUser, scope []string) (*entity.OAuthCode, error)
-	PersistOAuthCode(ctx context.Context, authCode *entity.OAuthCode) error
+	CreateOAuthCode(ctx context.Context, authCode *entity.OAuthCode) error
 	IsRevokedOAuthCode(ctx context.Context, code string) (bool, error)
 	RevokedOAuthCode(ctx context.Context, code string) error
 	GetByRefreshToken(ctx context.Context, refreshTokenCode string) (*entity.OAuthToken, error)
@@ -35,8 +35,8 @@ func (r *dbRepository) IssueWithAuthCode(ctx context.Context, client *entity.OAu
 	panic("unimplemented")
 }
 
-// PersistOAuthCode implements Repository.
-func (r *dbRepository) PersistOAuthCode(ctx context.Context, authCode *entity.OAuthCode) error {
+// CreateOAuthCode implements Repository.
+func (r *dbRepository) CreateOAuthCode(ctx context.Context, authCode *entity.OAuthCode) error {
 	panic("unimplemented")
 }
 
