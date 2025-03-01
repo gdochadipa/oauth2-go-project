@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/gdochadipa/oauth2-go-project/internal/entity"
@@ -12,7 +13,7 @@ import (
 )
 
 type AuthorizationRequest struct {
-	Scopes              []entity.OAuthScope
+	Scopes              *string
 	IsAuthApproved      bool
 	RedirectUri         *string
 	State               *string
@@ -21,7 +22,6 @@ type AuthorizationRequest struct {
 	Client              *entity.OAuthClient
 	GrantTypeId         *enum.GrantIdentifier
 	User                *entity.OAuthUser
-	Audience            []string
 }
 
 type PayloadAuthenticationCode struct {
@@ -36,34 +36,43 @@ type PayloadAuthenticationCode struct {
 	Audience            []string       `json:"audience"`
 }
 
+type AuthCodeRequest struct {
+	grantType     string
+	authorization string
+	redirectUri   *string
+	code          *string
+	clientId      *string
+	codeVerified  *string
+}
+
 type AuthCodeGrantInterface interface {
 	RespondToAccessTokenRequest(ctx context.Context, expiredAccessToken *time.Time, metadata metadata.MD) (*BearerTokenResponse, error)
-	ValidateAuthorizationRequest(ctx context.Context, clientId *string, scopes []entity.OAuthScope, state *string, audience *string, codeChallenge *string, codeChallengeMethod *string) (*AuthorizationRequest, error)
-	CompleteAuthorizationRequest(ctx context.Context, authRequest *AuthorizationRequest) (*string, error)
-	IssueAuthCode(ctx context.Context, expiredAuthCode *time.Time, client *entity.OAuthClient, userId *uuid.UUID, redirectUri *string, codeChallenge *string, codeChallengeMethod *string, scopes []entity.OAuthScope) (*entity.OAuthCode, error)
+	ValidateAuthorizationRequest(ctx context.Context, decryptCode *AuthCodeToken, request *AuthCodeRequest) (*AuthorizationRequest, error)
+	CompleteAuthorizationRequest(ctx context.Context, authRequest *AuthorizationRequest) (*string, *string, error)
+	CreateAuthCode(ctx context.Context, expiredAuthCode *time.Time, client *entity.OAuthClient, userId *uuid.UUID, redirectUri *string, codeChallenge *string, codeChallengeMethod *string, scopes *string) (*entity.OAuthCode, error)
 	RespondToRevokeRequest(ctx context.Context, grantType *string, token *string) error
 }
 
-// CompleteAuthorizationRequest implements ServiceInterface.
-func (g *ServiceServer) CompleteAuthorizationRequest(ctx context.Context, authRequest *AuthorizationRequest) (*string, error) {
+// GenerateAuthorizationCodeRequest implements ServiceInterface.
+func (g *ServiceServer) CompleteAuthorizationRequest(ctx context.Context, authRequest *AuthorizationRequest) (*string, *string, error) {
 
 	if authRequest == nil {
-		return nil, fmt.Errorf("Invalid authorization request")
+		return nil, nil, fmt.Errorf("invalid authorization request")
 	}
 
 	if !authRequest.IsAuthApproved {
-		return nil, fmt.Errorf("Auth is not approved")
+		return nil, nil, fmt.Errorf("auth is not approved")
 	}
 
 	if authRequest.User == nil {
-		return nil, fmt.Errorf("User is not found in request")
+		return nil, nil, fmt.Errorf("user is not found in request")
 	}
 
 	expired := g.dateInterval.GetEndDate()
-	authCode, error := g.IssueAuthCode(ctx, &expired, authRequest.Client, &authRequest.User.Id, authRequest.RedirectUri, authRequest.CodeChallenge, (*string)(authRequest.CodeChallengeMethod), authRequest.Scopes)
+	authCode, error := g.CreateAuthCode(ctx, &expired, authRequest.Client, &authRequest.User.Id, authRequest.RedirectUri, authRequest.CodeChallenge, (*string)(authRequest.CodeChallengeMethod), authRequest.Scopes)
 
 	if error != nil {
-		return nil, error
+		return nil, nil, error
 	}
 
 	payload := PayloadAuthenticationCode{
@@ -75,29 +84,58 @@ func (g *ServiceServer) CompleteAuthorizationRequest(ctx context.Context, authRe
 		ExpireTime:          g.dateInterval.GetEndTimeSeconds(),
 		CodeChallenge:       authRequest.CodeChallenge,
 		CodeChallengeMethod: authRequest.CodeChallengeMethod,
-		Audience:            authRequest.Audience,
 	}
 
 	authCodeToken, err := g.jwt.createAuthCodeToken(&payload)
 
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	redirectUri, err := g.makeRedirectUrl(authRequest.RedirectUri, map[string]interface{}{"code": authCodeToken})
 
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-	//! belum selesai
-	// perlu ngedefine redirect response sepertinya
 
-	return redirectUri, nil
+	return authCodeToken, redirectUri, nil
 }
 
-// IssueAuthCode implements ServiceInterface.
-func (g *ServiceServer) IssueAuthCode(ctx context.Context, expiredAuthCode *time.Time, client *entity.OAuthClient, userId *uuid.UUID, redirectUri *string, codeChallenge *string, codeChallengeMethod *string, scopes []entity.OAuthScope) (*entity.OAuthCode, error) {
-	panic("unimplemented")
+// CreateAuthCode implements ServiceInterface.
+func (g *ServiceServer) CreateAuthCode(ctx context.Context, expiredAuthCode *time.Time, client *entity.OAuthClient, userId *uuid.UUID, redirectUri *string, codeChallenge *string, codeChallengeMethod *string, scopes *string) (*entity.OAuthCode, error) {
+	splitString := strings.Split(*scopes, " ")
+	var scoped = make([]string, len(splitString))
+	for i, v := range splitString {
+		v = strings.ToLower(v)
+		scoped[i] = v
+	}
+
+	var user *entity.OAuthUser
+	var errUser error
+	if userId != nil {
+		user, errUser = g.repository.GetUserByIdentifier(ctx, userId)
+		if errUser != nil {
+			return nil, errUser
+		}
+	}
+
+	authCode := entity.OAuthCode{
+		ExpairedAt:          *expiredAuthCode,
+		RedirectUri:         redirectUri,
+		CodeChallenge:       codeChallenge,
+		CodeChallengeMethod: enum.CodeEnum(*codeChallengeMethod),
+		Scopes:              scoped,
+		User:                user,
+		UserId:              userId,
+	}
+
+	err := g.repository.CreateOAuthCode(ctx, &authCode)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &authCode, nil
 }
 
 // RespondToAccessTokenRequest implements ServiceInterface.
@@ -111,6 +149,6 @@ func (g *ServiceServer) RespondToRevokeRequest(ctx context.Context, grantType *s
 }
 
 // ValidateAuthorizationRequest implements ServiceInterface.
-func (g *ServiceServer) ValidateAuthorizationRequest(ctx context.Context, clientId *string, scopes []entity.OAuthScope, state *string, audience *string, codeChallenge *string, codeChallengeMethod *string) (*AuthorizationRequest, error) {
-	panic("unimplemented")
+func (g *ServiceServer) ValidateAuthorizationRequest(ctx context.Context, decryptCode *AuthCodeToken, request *AuthCodeRequest) (*AuthorizationRequest, error) {
+	panic("")
 }
