@@ -29,6 +29,6 @@ func (d *DateInterval) GetSeconds() int64 {
 	return int64(math.Ceil(float64(*d.interval) / float64(time.Second)))
 }
 
-func newDateInverface(interval *time.Duration) *DateInterval {
+func NewDateInterface(interval *time.Duration) *DateInterval {
 	return &DateInterval{interval: interval}
 }

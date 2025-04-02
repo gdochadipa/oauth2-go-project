@@ -18,12 +18,14 @@ type GrantInterface interface {
 	makeBearerTokenResponse(ctx context.Context, client *entity.OAuthClient, accessToken *entity.OAuthToken, scopes []entity.OAuthScope, user *entity.OAuthUser) (*BearerTokenResponse, error)
 	encryptRefreshToken(ctx context.Context, client *entity.OAuthClient, refreshToken *entity.OAuthToken, scopes []entity.OAuthScope) (*string, error)
 	encryptAccessToken(username string, client *entity.OAuthClient, accessToken *entity.OAuthToken, scopes []entity.OAuthScope) (*string, error)
-	validateClient(ctx context.Context, metadata metadata.MD) (*entity.OAuthClient, error)
+	validateClient(ctx context.Context) (*entity.OAuthClient, []string, error)
 	getClientCredentials(ctx context.Context, metadata metadata.MD) (*string, *string, error)
 	getBasicAuthCredentials(metadata metadata.MD) (*string, *string, error)
 	validateScopes(ctx context.Context, scopes []string) ([]entity.OAuthScope, error)
-	issueAccessToken(ctx context.Context, client *entity.OAuthClient, user *entity.OAuthUser, scopes []entity.OAuthScope, expiredAccessToken time.Time) (*entity.OAuthToken, error)
+	issueAccessToken(ctx context.Context, client *entity.OAuthClient, user *entity.OAuthUser, scopes []entity.OAuthScope, expiredAccessToken *time.Time) (*entity.OAuthToken, error)
 	getGrantType(ctx context.Context, metadata metadata.MD) (*enum.GrantIdentifier, error)
+	issueRefreshToken(ctx context.Context, accessToken *entity.OAuthToken, client *entity.OAuthClient) (*entity.OAuthToken, error)
+	GettingMetadata(ctx context.Context) (*metadata.MD, error)
 }
 
 type BearerTokenResponse struct {
@@ -84,6 +86,7 @@ func (g *ServiceServer) encryptRefreshToken(ctx context.Context, client *entity.
 *
 
 	this function for getting basic credentials from metadata
+	because get authorization from metadata
 */
 func (g *ServiceServer) getBasicAuthCredentials(metadata metadata.MD) (*string, *string, error) {
 	if metadata.Get("authorization") == nil {
@@ -122,7 +125,7 @@ kalo pake Basic Base64(clientid:clientSecret)
 
 ga mungkin bakal naruh credentials di metadata
 
-Opsi kedua adalah menggunakan handshake
+- Opsi kedua adalah menggunakan handshake
 
 tapi nanti aja opsi handshakenya, ribet bgt wkwk
 */
@@ -158,17 +161,25 @@ func (g *ServiceServer) getGrantType(ctx context.Context, metadata metadata.MD) 
 }
 
 // issueAccessToken implements GrantInterface.
-func (g *ServiceServer) issueAccessToken(ctx context.Context, client *entity.OAuthClient, user *entity.OAuthUser, scopes []entity.OAuthScope, expiredAccessToken time.Time) (*entity.OAuthToken, error) {
-	accessToken, error := g.repository.IssueToken(ctx, client, scopes, user)
+func (g *ServiceServer) issueAccessToken(ctx context.Context, client *entity.OAuthClient, user *entity.OAuthUser, scopes []entity.OAuthScope, expiredAccessToken *time.Time) (*entity.OAuthToken, error) {
+	// create access token
+	//CreateDataAccessToken
+	accessToken, error := g.repository.CreateDataAccessToken(ctx, client, scopes, user)
 
 	if error != nil {
 		return nil, error
 	}
 	// accessToken.AccessTokenExpiresAt = time.Now().Add(time.Hour * 24)
-	accessToken.AccessTokenExpiresAt = expiredAccessToken
+	accessToken.AccessTokenExpiresAt = *expiredAccessToken
 	g.repository.PersistAccessToken(ctx, accessToken)
 
 	return accessToken, nil
+}
+
+func (g *ServiceServer) issueRefreshToken(ctx context.Context, accessToken *entity.OAuthToken, client *entity.OAuthClient) (*entity.OAuthToken, error) {
+	//IssueRefreshToken
+	// update refresh token
+	return g.repository.UpdateRefreshToken(ctx, accessToken, client)
 }
 
 // makeBearerTokenResponse implements GrantInterface.
@@ -198,36 +209,49 @@ func (g *ServiceServer) makeBearerTokenResponse(ctx context.Context, client *ent
 }
 
 // validateClient implements GrantInterface.
-func (g *ServiceServer) validateClient(ctx context.Context, metadata metadata.MD) (*entity.OAuthClient, error) {
-	clientId, clientSecret, errCredent := g.getClientCredentials(ctx, metadata)
+// must in on bearer token
+// header is metadata
+func (g *ServiceServer) validateClient(ctx context.Context) (*entity.OAuthClient, []string,  error) {
+	md, ok := metadata.FromIncomingContext(ctx)
 
-	if errCredent != nil {
-		return nil, errCredent
+	if !ok {
+		return nil, nil,  fmt.Errorf("something wrong with metadata.")
 	}
 
-	grantType, getError := g.getGrantType(ctx, metadata)
+	clientId, clientSecret, errCredent := g.getClientCredentials(ctx, md)
+
+	if errCredent != nil {
+		return nil, nil,  errCredent
+	}
+
+	grantType, getError := g.getGrantType(ctx, md)
 
 	if getError != nil {
-		return nil, getError
+		return nil, nil, getError
 	}
 
 	client, repoError := g.repository.OAuthClientFindById(ctx, uuid.MustParse(*clientId))
 
 	if repoError != nil {
-		return nil, repoError
+		return nil,nil,  repoError
 	}
 
 	if clientSecret != nil {
-		return nil, fmt.Errorf("invalid.credentials")
+		return nil,nil, fmt.Errorf("invalid.credentials")
 	}
 
 	userValidationSuccess := g.repository.IsClientValid(ctx, grantType, client, clientSecret)
 
 	if !userValidationSuccess {
-		return nil, fmt.Errorf("invalid.credentials.not.pass")
+		return nil,nil, fmt.Errorf("invalid.credentials.not.pass")
 	}
 
-	return client, nil
+	redirectUri := md.Get("redirectUri");
+	if md.Get("redirectUri") == nil {
+		return nil,nil, fmt.Errorf("missing.redirect.uri")
+	}
+
+	return client, redirectUri,  nil
 
 }
 
@@ -247,4 +271,14 @@ func (g *ServiceServer) validateScopes(ctx context.Context, scopes []string) ([]
 	}
 
 	return validScopes, error
+}
+
+func (g *ServiceServer) GettingMetadata(ctx context.Context) (*metadata.MD, error) {
+	md, ok := metadata.FromIncomingContext(ctx)
+
+	if !ok {
+		return nil, fmt.Errorf("something wrong with metadata.")
+	}
+
+	return &md, nil
 }
