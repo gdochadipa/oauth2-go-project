@@ -7,21 +7,24 @@ option go_package = "v1/pb";
 message GenerateCodeRequest {
     string responseType = 1;
     string clientId = 2;
-    string redirectUri = 3;
+    repeated string redirectUri = 3;
     string codeChallenge = 4;
-    string scopes = 5; // sparated by space, or can to encoded to uriencoded (also sparated by space)
+    repeated string scopes = 5; // sparated by space, or can to encoded to uriencoded (also sparated by space)
+    string state=6;
+    string codeChallengeMethod=7;
 }
 
 message GenerateCodeResponse {
     string code = 1;
     string uri = 2;
+    string stateCode=3;
 }
 
 
 message AuthCodeGrantRequest {
     string grantType = 1;
     string authorization = 2; // "Basic ${Base64(clientId:ClientSecret)}"
-    string redirectUri = 3;
+    repeated string redirectUri = 3;
     string code = 4; // this code generate after GenerateAuthCode and login
     string clientId = 5;
     string codeVerifier=6;

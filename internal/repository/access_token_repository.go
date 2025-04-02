@@ -7,8 +7,8 @@ import (
 )
 
 type AccessTokenRepository interface {
-	IssueToken(ctx context.Context, client *entity.OAuthClient, scope []entity.OAuthScope, user *entity.OAuthUser) (*entity.OAuthToken, error)
-	IssueRefreshToken(ctx context.Context, accessToken *entity.OAuthToken, client *entity.OAuthClient) (*entity.OAuthToken, error)
+	CreateDataAccessToken(ctx context.Context, client *entity.OAuthClient, scope []entity.OAuthScope, user *entity.OAuthUser) (*entity.OAuthToken, error)
+	UpdateRefreshToken(ctx context.Context, accessToken *entity.OAuthToken, client *entity.OAuthClient) (*entity.OAuthToken, error)
 	PersistAccessToken(ctx context.Context, accessToken *entity.OAuthToken) error
 	RevokeAccessToken(ctx context.Context, accessToken *entity.OAuthToken) error
 	IsRefreshTokenRevoked(ctx context.Context, refreshToken *entity.OAuthToken) (bool, error)
@@ -19,13 +19,13 @@ func (r *dbRepository) IsRefreshTokenRevoked(ctx context.Context, refreshToken *
 	panic("unimplemented")
 }
 
-// IssueRefreshToken implements Repository.
-func (r *dbRepository) IssueRefreshToken(ctx context.Context, accessToken *entity.OAuthToken, client *entity.OAuthClient) (*entity.OAuthToken, error) {
+// UpdateRefreshToken implements Repository.
+func (r *dbRepository) UpdateRefreshToken(ctx context.Context, accessToken *entity.OAuthToken, client *entity.OAuthClient) (*entity.OAuthToken, error) {
 	panic("unimplemented")
 }
 
-// IssueToken implements Repository.
-func (r *dbRepository) IssueToken(ctx context.Context, client *entity.OAuthClient, scope []entity.OAuthScope, user *entity.OAuthUser) (*entity.OAuthToken, error) {
+// CreateDataAccessToken implements Repository.
+func (r *dbRepository) CreateDataAccessToken(ctx context.Context, client *entity.OAuthClient, scope []entity.OAuthScope, user *entity.OAuthUser) (*entity.OAuthToken, error) {
 	panic("unimplemented")
 }
 

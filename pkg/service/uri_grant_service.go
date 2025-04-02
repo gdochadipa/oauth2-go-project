@@ -2,16 +2,17 @@ package service
 
 import (
 	"github.com/gdochadipa/oauth2-go-project/internal/entity"
+	"github.com/gdochadipa/oauth2-go-project/pkg/api/v1/pb"
 )
 
 type UriGrantService interface {
-	getRedirectUri(redirectUri string, client *entity.OAuthClient) (*string, error)
+	getRedirectUri(request *pb.GenerateCodeRequest, client *entity.OAuthClient) (*string, error)
 	validateRedirectUri(redirectUri string, client *entity.OAuthClient) (*string, error)
 	makeRedirectUrl(uri *string, params map[string]any) (*string, error)
 }
 
 // getRedirectUri implements ServiceInterface.
-func (g *ServiceServer) getRedirectUri(redirectUri string, client *entity.OAuthClient) (*string, error) {
+func (g *ServiceServer) getRedirectUri(request *pb.GenerateCodeRequest, client *entity.OAuthClient) (*string, error) {
 	panic("unimplemented")
 }
 

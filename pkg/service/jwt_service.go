@@ -18,6 +18,7 @@ type JWTInterface interface {
 	verifyRefreshToken(encryptData string) (*RefreshAccessToken, error)
 	createAuthCodeToken(payload *PayloadAuthenticationCode) (*string, error)
 	verifyAuthCodeToken(tokenString string) (*AuthCodeToken, error)
+	decodeAuthCodeToken(encryptData string) (*AuthCodeToken, error)
 }
 
 type JWTRepository struct {
@@ -37,33 +38,33 @@ sepertinya bisa sama dengan AccessToken tapi isinya lebih banyak aja.
 create AccessToken akan beda dg RefreshToken, yg memedakan cuma issian aja, dan parameter-
 */
 type AccessToken struct {
-	UserId      string `json:"userId"`
+	UserId      string `json:"user_id"`
 	Username    string `json:"username"`
-	ClientId    string `json:"clientId"`
-	RedirectUri string `json:"redirectUri"`
+	ClientId    string `json:"client_id"`
+	RedirectUri string `json:"redirect_uri"`
 	AuthCodeId  string `json:"auth_code"`
 	Scopes      string `json:"scopes"`
 	jwt.RegisteredClaims
 }
 
 type RefreshAccessToken struct {
-	ClientId            string    `json:"clientId"`
-	RedirectUri         string    `json:"redirectUri"`
+	ClientId            string    `json:"client_id"`
+	RedirectUri         string    `json:"redirect_uri"`
 	AuthCodeId          string    `json:"auth_code"`
 	Scopes              string    `json:"scopes"`
-	UserId              string    `json:"userId"`
-	ExpireTime          time.Time `json:"expireTime"`
-	CodeChallenge       *string   `json:"codeChallenge"`
-	CodeChallengeMethod *string   `json:"codeChallengeMethod"`
+	UserId              string    `json:"user_id"`
+	ExpireTime          time.Time `json:"expire_time"`
+	CodeChallenge       *string   `json:"code_challenge"`
+	CodeChallengeMethod *string   `json:"code_challenge_method"`
 	jwt.RegisteredClaims
 }
 
 type AuthCodeToken struct {
-	ClidenID            string         `json:"client_id"`
+	ClientID            string         `json:"client_id"`
 	AuthCodeID          string         `json:"auth_code_id"`
 	ExpireTime          int64          `json:"expire_time"`
 	Scopes              []string       `json:"scopes"`
-	UserID              *int16         `json:"user_id"`
+	UserID              *string        `json:"user_id"`
 	RedirectURI         *string        `json:"redirect_uri"`
 	CodeChallenge       *string        `json:"code_challenge"`
 	CodeChallengeMethod *enum.CodeEnum `json:"code_challenge_method"`
@@ -181,7 +182,7 @@ func (r *JWTRepository) verifyRefreshToken(encryptData string) (*RefreshAccessTo
 
 func (r *JWTRepository) createAuthCodeToken(payload *PayloadAuthenticationCode) (*string, error) {
 	claims := AuthCodeToken{
-		ClidenID:            payload.ClidenID,
+		ClientID:            payload.ClidenID,
 		RedirectURI:         payload.RedirectURI,
 		AuthCodeID:          payload.AuthCodeID,
 		Scopes:              payload.Scopes,
@@ -226,6 +227,18 @@ func (r *JWTRepository) verifyAuthCodeToken(tokenString string) (*AuthCodeToken,
 	}
 
 	return nil, fmt.Errorf("invalid token claims")
+}
+
+func (r *JWTRepository) decodeAuthCodeToken(encryptData string) (*AuthCodeToken, error) {
+	token, _ := jwt.ParseWithClaims(encryptData, &AuthCodeToken{}, func(t *jwt.Token) (interface{}, error) {
+		return nil, nil
+	})
+
+	if claims, ok := token.Claims.(*AuthCodeToken); ok {
+		return claims, nil
+	}
+
+	return nil, fmt.Errorf("invalid refresh token claims")
 }
 
 func NewJWTRepository(secretKey []byte) JWTInterface {

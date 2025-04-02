@@ -1,5 +1,9 @@
 package enum
 
+import (
+	"fmt"
+)
+
 type CodeEnum string
 
 const (
@@ -28,4 +32,16 @@ var grantIdentifierType = map[GrantIdentifier]struct{}{
 func IsIncludeGrant(s GrantIdentifier) bool {
 	_, isExists := grantIdentifierType[s]
 	return isExists
+}
+
+func ConvertCodeEnum(s *string) (CodeEnum, error) {
+	switch *s {
+	case "S256":
+		return S256, nil
+	case "Plain":
+		return Plain, nil
+
+	default:
+		return Plain, fmt.Errorf("not.found.code.enum")
+	}
 }
