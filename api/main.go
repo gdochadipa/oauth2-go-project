@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 
 	"github.com/gdochadipa/oauth2-go-project/internal/repository"
@@ -9,20 +8,21 @@ import (
 	"github.com/gdochadipa/oauth2-go-project/pkg/database"
 	"github.com/gdochadipa/oauth2-go-project/pkg/server"
 	"github.com/gdochadipa/oauth2-go-project/pkg/service"
+	"github.com/golang/glog"
 )
 
 func main() {
 	cfg, err := configs.Load()
 
 	if err != nil {
-		fmt.Sprintln("Config load failed %v", err)
+		glog.Fatalf("Config load failed %v", err.Error())
 	}
 	// dbnya belum aktif sebelum kita ngebuild grpcnya
-	// kayaknya pakein mutex atau gorotine
-	db, err := database.NewPostgressConnection(cfg.Database)
+	// db, err := database.NewPostgressConnection(cfg.Database)
 	// db, err := database.GormDB(cfg.Database)
+	db, err := database.InitDBClient(cfg.Database)
 	if err != nil {
-		fmt.Sprintln("Database load failed %v", err)
+	 	glog.Fatalf("Failed to initialize the databases. Error: %s", err.Error())
 	}
 
 	// dbSQL, err := db.DB()
