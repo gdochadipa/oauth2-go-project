@@ -44,6 +44,7 @@ type AuthCodeGrantInterface interface {
 	CreateAuthCode(ctx context.Context, expiredAuthCode *time.Time, client *entity.OAuthClient, userId *uuid.UUID, redirectUri *string, codeChallenge *string, codeChallengeMethod *string, scopes []string) (*entity.OAuthCode, error)
 	RespondToRevokeRequest(ctx context.Context, grantType *string, token *string) error
 	ValidateAuthorizationCode(ctx context.Context, redirectUri []string, client *entity.OAuthClient, authCodeToken *AuthCodeToken) error
+	ValidateScope(ctx context.Context, scopes []string) ([]entity.OAuthScope, error)
 }
 
 // GenerateAuthorizationCodeRequest implements ServiceInterface.
@@ -68,11 +69,12 @@ func (g *ServiceServer) CompleteAuthorizationRequest(ctx context.Context, authRe
 		return nil, nil, error
 	}
 	userId := authCode.User.Id.String()
+
 	payload := PayloadAuthenticationCode{
 		ClidenID:            authCode.Client.Id.String(),
 		RedirectURI:         authCode.RedirectUri,
 		AuthCodeID:          authCode.Code,
-		Scopes:              authCode.Scopes,
+		Scopes:              authCode.GetScopeString(),
 		UserID:              &userId,
 		ExpireTime:          g.dateInterval.GetEndTimeSeconds(),
 		CodeChallenge:       authRequest.CodeChallenge,
@@ -113,17 +115,18 @@ func (g *ServiceServer) CreateAuthCode(ctx context.Context, expiredAuthCode *tim
 		}
 	}
 
+	dataScope, err := g.ValidateScope(ctx,scopes)
 	authCode := entity.OAuthCode{
-		ExpairedAt:          *expiredAuthCode,
+		ExpiresAt:          *expiredAuthCode,
 		RedirectUri:         redirectUri,
 		CodeChallenge:       codeChallenge,
-		CodeChallengeMethod: enum.CodeEnum(*codeChallengeMethod),
-		Scopes:              scopes,
+		CodeChallengeMethod: *codeChallengeMethod,
+		Scopes:              dataScope,
 		User:                user,
 		UserId:              userId,
 	}
 
-	err := g.repository.CreateOAuthCode(ctx, &authCode)
+	err = g.repository.CreateOAuthCode(ctx, &authCode)
 
 	if err != nil {
 		return nil, err
@@ -339,4 +342,14 @@ func (g *ServiceServer) ValidateAuthorizationCode(ctx context.Context, redirectU
 	}
 
 	return nil
+}
+
+func (g *ServiceServer) ValidateScope(ctx context.Context, scopeNames []string) ([]entity.OAuthScope, error) {
+  dataScopes, err := g.repository.GetAllScope(ctx, scopeNames)
+
+  if err != nil {
+  return nil, err
+  }
+
+  return dataScopes, nil
 }
