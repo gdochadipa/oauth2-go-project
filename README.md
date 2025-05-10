@@ -57,7 +57,9 @@ Contributions are welcome! If you would like to contribute to this project, plea
 
 ## License
 
-This project is currently not licensed. If you wish to use it, ensure you have the author's permission.
+This project is licensed under the Apache License 2.0. You may obtain a copy of the License at:
+
+[Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0)
 
 ---
 
